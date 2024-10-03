@@ -1,0 +1,48 @@
+/* Basic reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Style the navbar */
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 2rem;
+    background-color: #333;
+    color: white;
+}
+
+/* Style the logo */
+.nav-logo a {
+    font-size: 1.5rem;
+    color: white;
+    text-decoration: none;
+}
+
+/* Style the navigation links */
+.nav-links {
+    list-style: none;
+    display: flex;
+    gap: 1.5rem;
+}
+
+.nav-links li a {
+    color: white;
+    text-decoration: none;
+    font-size: 1rem;
+}
+
+/* Hover effect */
+.nav-links li a:hover {
+    color: #ffcc00;
+}
+
+/* Make the navbar responsive */
+@media (max-width: 768px) {
+    .nav-links {
+        display: none;
+    }
+}

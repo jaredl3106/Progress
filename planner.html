@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Workout Planner</title>
+    <script src="https://unpkg.com/react@17/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+    <script src="https://unpkg.com/react-beautiful-dnd@13.1.0/dist/react-beautiful-dnd.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+        const { DragDropContext, Droppable, Draggable } = window.ReactBeautifulDnd;
+
+        const WorkoutCard = ({ workout, index, removeWorkout }) => {
+            return (
+                <Draggable draggableId={workout.id} index={index}>
+                    {(provided) => (
+                        <div
+                            ref={provided.innerRef}
+                            {...provided.draggableProps}
+                            {...provided.dragHandleProps}
+                            className="bg-white p-3 rounded shadow mb-2 relative"
+                        >
+                            <button
+                                onClick={() => removeWorkout(workout.id)}
+                                className="absolute top-1 right-1 text-red-500 hover:text-red-700"
+                            >
+                                ×
+                            </button>
+                            <h3 className="font-bold">{workout.name}</h3>
+                        </div>
+                    )}
+                </Draggable>
+            );
+        };
+
+        const DayColumn = ({ day, workouts, removeWorkout }) => {
+            return (
+                <div className="bg-gray-200 p-4 rounded">
+                    <h2 className="font-bold mb-2">{day}</h2>
+                    <Droppable droppableId={day}>
+                        {(provided) => (
+                            <div
+                                {...provided.droppableProps}
+                                ref={provided.innerRef}
+                                className="min-h-[100px]"
+                            >
+                                {workouts.map((workout, index) => (
+                                    <WorkoutCard
+                                        key={workout.id}
+                                        workout={workout}
+                                        index={index}
+                                        removeWorkout={removeWorkout}
+                                    />
+                                ))}
+                                {provided.placeholder}
+                            </div>
+                        )}
+                    </Droppable>
+                </div>
+            );
+        };
+
+        const WorkoutPlanner = () => {
+            const [workouts, setWorkouts] = useState(() => {
+                const savedWorkouts = localStorage.getItem('workouts');
+                return savedWorkouts ? JSON.parse(savedWorkouts) : {};
+            });
+
+            useEffect(() => {
+                localStorage.setItem('workouts', JSON.stringify(workouts));
+            }, [workouts]);
+
+            const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+
+            const onDragEnd = (result) => {
+                const { source, destination } = result;
+
+                if (!destination) {
+                    return;
+                }
+
+                const sourceDay = source.droppableId;
+                const destDay = destination.droppableId;
+
+                const newWorkouts = { ...workouts };
+
+                const [movedWorkout] = newWorkouts[sourceDay].splice(source.index, 1);
+                newWorkouts[destDay].splice(destination.index, 0, movedWorkout);
+
+                setWorkouts(newWorkouts);
+            };
+
+            const removeWorkout = (workoutId) => {
+                if (window.confirm('Are you sure you want to remove this workout?')) {
+                    const newWorkouts = { ...workouts };
+                    for (const day in newWorkouts) {
+                        newWorkouts[day] = newWorkouts[day].filter(w => w.id !== workoutId);
+                    }
+                    setWorkouts(newWorkouts);
+                }
+            };
+
+            return (
+                <div className="container mx-auto p-4">
+                    <h1 className="text-3xl font-bold mb-4">Workout Planner</h1>
+                    <DragDropContext onDragEnd={onDragEnd}>
+                        <div className="grid grid-cols-1 md:grid-cols-7 gap-4">
+                            {days.map(day => (
+                                <DayColumn
+                                    key={day}
+                                    day={day}
+                                    workouts={workouts[day] || []}
+                                    removeWorkout={removeWorkout}
+                                />
+                            ))}
+                        </div>
+                    </DragDropContext>
+                </div>
+            );
+        };
+
+        ReactDOM.render(<WorkoutPlanner />, document.getElementById('root'));
+    </script>
+</body>
+</html>

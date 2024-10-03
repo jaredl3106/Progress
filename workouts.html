@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Custom Workout Creator</title>
+    <script src="https://unpkg.com/react@17/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100">
+    <div id="root" class="container mx-auto p-4"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        const ExerciseInput = ({ exercise, index, updateExercise, removeExercise }) => (
+            <div class="mb-4 p-4 bg-white rounded shadow">
+                <input
+                    type="text"
+                    placeholder="Exercise name"
+                    value={exercise.name}
+                    onChange={(e) => updateExercise(index, 'name', e.target.value)}
+                    class="w-full mb-2 p-2 border rounded"
+                />
+                <input
+                    type="number"
+                    placeholder="Sets"
+                    value={exercise.sets}
+                    onChange={(e) => updateExercise(index, 'sets', e.target.value)}
+                    class="w-full mb-2 p-2 border rounded"
+                />
+                <input
+                    type="number"
+                    placeholder="Reps"
+                    value={exercise.reps}
+                    onChange={(e) => updateExercise(index, 'reps', e.target.value)}
+                    class="w-full mb-2 p-2 border rounded"
+                />
+                <input
+                    type="number"
+                    placeholder="Weight (optional)"
+                    value={exercise.weight}
+                    onChange={(e) => updateExercise(index, 'weight', e.target.value)}
+                    class="w-full mb-2 p-2 border rounded"
+                />
+                <button onClick={() => removeExercise(index)} class="bg-red-500 text-white px-4 py-2 rounded">
+                    Remove Exercise
+                </button>
+            </div>
+        );
+
+        const WorkoutForm = () => {
+            const [workoutName, setWorkoutName] = useState('');
+            const [workoutDescription, setWorkoutDescription] = useState('');
+            const [exercises, setExercises] = useState([]);
+            const [savedWorkouts, setSavedWorkouts] = useState([]);
+            const [message, setMessage] = useState('');
+
+            useEffect(() => {
+                const storedWorkouts = JSON.parse(localStorage.getItem('workouts')) || [];
+                setSavedWorkouts(storedWorkouts);
+            }, []);
+
+            const addExercise = () => {
+                setExercises([...exercises, { name: '', sets: '', reps: '', weight: '' }]);
+            };
+
+            const updateExercise = (index, field, value) => {
+                const updatedExercises = [...exercises];
+                updatedExercises[index][field] = value;
+                setExercises(updatedExercises);
+            };
+
+            const removeExercise = (index) => {
+                const updatedExercises = exercises.filter((_, i) => i !== index);
+                setExercises(updatedExercises);
+            };
+
+            const saveWorkout = () => {
+                const workout = { name: workoutName, description: workoutDescription, exercises };
+                const updatedWorkouts = [...savedWorkouts, workout];
+                localStorage.setItem('workouts', JSON.stringify(updatedWorkouts));
+                setSavedWorkouts(updatedWorkouts);
+                setMessage('Workout saved successfully!');
+                setTimeout(() => setMessage(''), 3000);
+                setWorkoutName('');
+                setWorkoutDescription('');
+                setExercises([]);
+            };
+
+            const clearWorkouts = () => {
+                localStorage.removeItem('workouts');
+                setSavedWorkouts([]);
+                setMessage('All workouts cleared!');
+                setTimeout(() => setMessage(''), 3000);
+            };
+
+            return (
+                <div>
+                    <h1 class="text-3xl font-bold mb-4">Custom Workout Creator</h1>
+                    <div class="mb-4">
+                        <input
+                            type="text"
+                            placeholder="Workout Name"
+                            value={workoutName}
+                            onChange={(e) => setWorkoutName(e.target.value)}
+                            class="w-full mb-2 p-2 border rounded"
+                        />
+                        <textarea
+                            placeholder="Workout Description"
+                            value={workoutDescription}
+                            onChange={(e) => setWorkoutDescription(e.target.value)}
+                            class="w-full mb-2 p-2 border rounded"
+                        ></textarea>
+                    </div>
+                    {exercises.map((exercise, index) => (
+                        <ExerciseInput
+                            key={index}
+                            exercise={exercise}
+                            index={index}
+                            updateExercise={updateExercise}
+                            removeExercise={removeExercise}
+                        />
+                    ))}
+                    <button onClick={addExercise} class="bg-blue-500 text-white px-4 py-2 rounded mb-4">
+                        Add Exercise
+                    </button>
+                    <button onClick={saveWorkout} class="bg-green-500 text-white px-4 py-2 rounded mb-4 ml-2">
+                        Save Workout
+                    </button>
+                    {message && <p class="text-green-500 mb-4">{message}</p>}
+                    <h2 class="text-2xl font-bold mb-2">Saved Workouts</h2>
+                    <ul class="mb-4">
+                        {savedWorkouts.map((workout, index) => (
+                            <li key={index} class="mb-2">
+                                {workout.name} ({workout.exercises.length} exercises)
+                            </li>
+                        ))}
+                    </ul>
+                    <button onClick={clearWorkouts} class="bg-red-500 text-white px-4 py-2 rounded">
+                        Clear All Workouts
+                    </button>
+                </div>
+            );
+        };
+
+        ReactDOM.render(<WorkoutForm />, document.getElementById('root'));
+    </script>
+</body>
+</html>
